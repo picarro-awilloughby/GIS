@@ -1,0 +1,36 @@
+from arcgis import GeoAccessor
+from arcgis.features import GeoAccessor
+
+def df_shape_to_featureclass(df,fc_name, geo_column, sr, gdb_dir):
+    df['report_id']=df['report_id'].astype(str)
+    sedf = GeoAccessor.from_df(
+      df=df,
+      sr=sr, 
+      geometry_column=geo_column,    )
+
+    fc_name = "\\"+fc_name
+    fc_dir = gdb_dir+fc_name
+    print(fc_dir)
+    sedf.spatial.to_featureclass(fc_dir)
+    return fc_dir
+    
+    
+def arcgis_table_to_df(in_fc, input_fields=None, query=""):
+    """Function will convert an arcgis table into a pandas dataframe with an object ID index, and the selected
+    input fields using an arcpy.da.SearchCursor.
+    :param - in_fc - input feature class or table to convert
+    :param - input_fields - fields to input to a da search cursor for retrieval
+    :param - query - sql query to grab appropriate values
+    :returns - pandas.DataFrame"""
+    OIDFieldName = arcpy.Describe(in_fc).OIDFieldName
+    if input_fields:
+        if OIDFieldName in input_fields:
+            final_fields =  input_fields
+        else:
+            final_fields = [OIDFieldName] + input_fields
+    else:
+        final_fields = [field.name for field in arcpy.ListFields(in_fc)]
+    data = [row for row in arcpy.da.SearchCursor(in_fc,final_fields,where_clause=query)]
+    fc_dataframe = pd.DataFrame(data,columns=final_fields)
+    fc_dataframe = fc_dataframe.set_index(OIDFieldName,drop=True)
+    return fc_dataframe
