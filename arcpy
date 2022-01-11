@@ -1,5 +1,6 @@
 from arcgis import GeoAccessor
 from arcgis.features import GeoAccessor
+import arcpy
 
 def df_shape_to_featureclass(df,fc_name, geo_column, sr, gdb_dir):
     df['report_id']=df['report_id'].astype(str)
